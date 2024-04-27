@@ -1,5 +1,6 @@
 import Tile from '../Tile/Tile'
 import './Chessboard.css'
+import React, { useRef } from 'react';
 
 const verticalAxis = ["1", "2", "3", "4", "5", "6", "7", "8"];
 const horizontalAxis = ["a", "b", "c", "d", "e", "f", "g", "h"]
@@ -35,20 +36,101 @@ pieces.push({image: "assets/images/pawn_w.png", x: 5, y: 1})
 pieces.push({image: "assets/images/pawn_w.png", x: 6, y: 2})
 
 
+
 export default function Chessboard(){
+    const chessboardRef = useRef<HTMLDivElement>(null);
+
+    let activePiece: HTMLElement | null = null;
+
+function grabPiece(e: React.MouseEvent) {
+    const element = e.target as HTMLElement;
+    if (element.classList.contains("chess-piece")) {
+      const x = e.clientX -25;
+      const y = e.clientY -25;
+      element.style.position = "absolute";
+      element.style.left = `${x}px`;
+      element.style.top = `${y}px`;
+      /*const boardRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const boardCenter = {
+        x: boardRect.left + boardRect.width / 2,
+        y: boardRect.top + boardRect.height / 2,
+      };
+  
+      const rotatedX = e.clientY - boardCenter.y + 25; 
+      const rotatedY = boardCenter.x - e.clientX + 25; 
+  
+      element.style.position = "absolute";
+      element.style.left = `${rotatedX}px`;
+      element.style.top = `${rotatedY}px`;*/ 
+      activePiece = element;
+    }
+  }
+  
+  function movePiece(e: React.MouseEvent) {
+    const chessboard = chessboardRef.current;
+    if (activePiece && chessboard) {
+      const minX = chessboard.offsetLeft -25;
+      const minY = chessboard.offsetTop -25;
+      const maxX = chessboard.offsetLeft + chessboard.clientWidth - 25;
+      const maxY = chessboard.offsetTop + chessboard.clientWidth - 25;
+      const x = e.clientX -25;
+      const y = e.clientY -25;
+      activePiece.style.position = "absolute";
+      //activePiece.style.left = `${x}px`;
+      //activePiece.style.top = `${y}px`;
+
+      if(x < minX){
+        activePiece.style.left = `${minX}px`;
+      } 
+      else if(x >maxX){
+        activePiece.style.left = `${maxX}px`;
+      }
+      else{
+        activePiece.style.left = `${x}px`;
+      }
+
+      if(y < minY){
+        activePiece.style.top = `${minY}px`;
+      } 
+      else if(y > maxY){
+        activePiece.style.top = `${maxY}px`;
+      }
+      else{
+        activePiece.style.top = `${y}px`;
+      }
+
+      /*const boardRect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const boardCenter = {
+        x: boardRect.left + boardRect.width / 2,
+        y: boardRect.top + boardRect.height / 2,
+      };
+  
+      const rotatedX = e.clientY - boardCenter.y + 25; 
+      const rotatedY = boardCenter.x - e.clientX + 25; 
+  
+      activePiece.style.left = `${rotatedX}px`;
+      activePiece.style.top = `${rotatedY}px`;*/
+    }
+  }
+
+function dropPiece(e: React.MouseEvent) {
+    if(activePiece) {
+        activePiece = null;
+    }
+}
     let board = [];
     for(let j = verticalAxis.length-1; j >= 0; j--){
         for(let i = 0; i < horizontalAxis.length; i++){
             const number = j + i + 2;
-            let image = ' ';
+            let image : string | undefined;
             pieces.forEach(p=>{
                 if (p.x === i && p.y === j){
                     image = p.image;
                 }
 
             })
-            board.push(<Tile image={image} number = {number}/> );
+            board.push(<Tile key={`${j} ${i}`} image={image} number = {number}/> );
         }
     }
-    return <div id="chessboard">{board}</div>
+    return <div onMouseUp={(e) => dropPiece(e)} onMouseMove={(e) => movePiece(e)} onMouseDown={e => grabPiece(e)} id="chessboard" ref={chessboardRef}>{board}</div>
 }
